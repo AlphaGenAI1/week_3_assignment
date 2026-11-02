@@ -29,6 +29,7 @@ ts-debug.log*
 # local env files
 .env*.local
 .env
+.env.local
 
 # vercel
 .vercel
@@ -55,3 +56,24 @@ backend/*.pyc
 
 
 *.npz
+
+# Build outputs
+/build
+/dist
+/.next/
+/out/
+
+
+# OS files
+.DS_Store
+*.log
+
+# IDE
+.vscode/
+.idea/
+
+# Claude Code
+.claude/
+
+# Production env
+.env.production
