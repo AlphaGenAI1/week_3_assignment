@@ -2,6 +2,41 @@
 
 A full-stack Retrieval-Augmented Generation (RAG) application for searching and querying SIGGRAPH 2025 research papers. This project combines a Next.js frontend with a FastAPI backend to provide an intelligent search interface powered by AI.
 
+## 📝 Implementation Notes
+
+### Live deployment
+- **Frontend (Vercel):** https://week-3-assignment-seven.vercel.app
+- **Backend (Render):** https://siggraph-rag-backend-lt9m.onrender.com (API docs at `/docs`)
+- Deployed from the `submission` branch. The Render free tier sleeps after 15 minutes
+  without traffic, so the first request can take 30–60 seconds.
+
+### What I implemented
+- **Ingestion:** uploaded all 11,008 chunks to Qdrant Cloud (collection `siggraph2025_papers`)
+  using the precomputed `BAAI/bge-large-en-v1.5` embeddings (1024 dims, cosine).
+- **Retrieval (`retrieval_pipeline.py`):** query embedding via OpenRouter, Qdrant semantic search,
+  in-memory BM25 index, weighted hybrid search (0.7 semantic / 0.3 BM25) and Cohere reranking
+  (`rerank-english-v3.0`).
+- **Generation (`rag_generate.py`):** query refinement with `openai/gpt-4o-mini`, context
+  formatting, deduplicated source metadata and answer generation with `openai/gpt-4o`, all through OpenRouter.
+
+### Fixes to the provided template
+- `api_server.py`: switched from the mock to the real `RAGGenerator`, removed a duplicate
+  `openai/` model prefix, and passed `sources` as a list (as returned by `_build_sources_metadata`).
+- `GenerationConfig` accepts `llm_provider` and `use_reranker`, and `retrieve()` accepts
+  `use_hybrid` and `use_reranker`, because `api_server.py` passes them.
+- `requirements.txt`: `uvicorn[standard]` so that the `/ws/query` WebSocket endpoint works.
+- `.env.example`: lists only the variables the code reads, including the optional `COHERE_API_KEY`.
+
+### Testing
+There is no automated test suite. I tested manually: retrieval and generation via their CLI
+entry points, `/health`, `/api/info`, `POST /api/query` and `/api/stream` with curl, and the full
+app locally and on Vercel (answer with sources in about 8 seconds).
+
+### Known limitations
+- The frontend renders LaTeX from the answer as plain text (KaTeX is installed but not used).
+- The `TODO:` blocks in the docstrings come from the template. All steps are implemented below them.
+- `/api/info` lists only some of the endpoints. The full list is at `/docs`.
+
 ## 🎯 Project Overview
 
 Build a production-ready RAG application that allows users to:
